@@ -1,0 +1,14 @@
+{
+  "name": "multi-agent-room",
+  "version": "1.0.0",
+  "description": "Phòng làm việc nhóm giữa bạn và nhiều AI: Claude, ChatGPT (Codex), Gemini, Claude Design và Qwen chạy trên máy.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED",
+  "private": true
+}

@@ -1,0 +1,1007 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f9fafb; --surface: #ffffff; --surface-2: #f3f4f6; --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #111827; --text-2: #4b5563; --muted: #9ca3af;
+    --accent: #111827; --accent-text: #ffffff;
+    --claude: #d97757; --codex: #10a37f; --gemini: #4285f4; --qwen: #7c5cff; --design: #e0457b;
+    --claude-soft: #fbeee9; --codex-soft: #e3f5ef; --gemini-soft: #e8f0fe; --qwen-soft: #f0ecff; --design-soft: #fdebf1;
+    --agree: #16a34a; --agree-soft: #f0fdf4; --disagree: #d97706; --disagree-soft: #fffbeb;
+    --danger: #dc2626; --danger-soft: #fef2f2;
+    --shadow-float: 0 10px 25px -5px rgba(0,0,0,.08), 0 4px 10px -6px rgba(0,0,0,.06);
+    --radius: 12px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0a0a0a; --surface: #121212; --surface-2: #1a1a1a; --border: #1f1f1f; --border-strong: #2e2e2e;
+      --text: #ededed; --text-2: #a3a3a3; --muted: #6b6b6b;
+      --accent: #ededed; --accent-text: #0a0a0a;
+      --claude: #e08b6d; --codex: #2bbf94; --gemini: #6aa1ff; --qwen: #a48bff; --design: #ff7aa5;
+      --claude-soft: #2d1e1a; --codex-soft: #162c26; --gemini-soft: #1a2333; --qwen-soft: #221c38; --design-soft: #33182a;
+      --agree: #4ade80; --agree-soft: #10241a; --disagree: #fbbf24; --disagree-soft: #2a2110;
+      --danger: #f87171; --danger-soft: #2a1414;
+      --shadow-float: 0 10px 30px -8px rgba(0,0,0,.6);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0a0a0a; --surface: #121212; --surface-2: #1a1a1a; --border: #1f1f1f; --border-strong: #2e2e2e;
+    --text: #ededed; --text-2: #a3a3a3; --muted: #6b6b6b;
+    --accent: #ededed; --accent-text: #0a0a0a;
+    --claude: #e08b6d; --codex: #2bbf94; --gemini: #6aa1ff; --qwen: #a48bff; --design: #ff7aa5;
+    --claude-soft: #2d1e1a; --codex-soft: #162c26; --gemini-soft: #1a2333; --qwen-soft: #221c38; --design-soft: #33182a;
+    --agree: #4ade80; --agree-soft: #10241a; --disagree: #fbbf24; --disagree-soft: #2a2110;
+    --danger: #f87171; --danger-soft: #2a1414;
+    --shadow-float: 0 10px 30px -8px rgba(0,0,0,.6);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 15px/1.6 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased; display: flex; overflow: hidden;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  code, pre { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .claude { --c: var(--claude); --c-soft: var(--claude-soft); }
+  .codex  { --c: var(--codex);  --c-soft: var(--codex-soft); }
+  .gemini { --c: var(--gemini); --c-soft: var(--gemini-soft); }
+  .qwen   { --c: var(--qwen);   --c-soft: var(--qwen-soft); }
+  .design { --c: var(--design); --c-soft: var(--design-soft); }
+
+  /* ---------- sidebar ---------- */
+  aside {
+    width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 24px;
+    padding: 20px 16px; border-right: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 85%, transparent); backdrop-filter: blur(12px);
+    overflow-y: auto; z-index: 20;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-mark { position: relative; width: 32px; height: 32px; flex-shrink: 0; }
+  .brand-mark span { position: absolute; width: 16px; height: 16px; border-radius: 50%; mix-blend-mode: multiply; opacity: .9; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .brand-mark span { mix-blend-mode: screen; } }
+  :root[data-theme="dark"] .brand-mark span { mix-blend-mode: screen; }
+  .brand-mark span:nth-child(1) { background: var(--claude); left: 3px; top: 3px; }
+  .brand-mark span:nth-child(2) { background: var(--codex); left: 13px; top: 3px; }
+  .brand-mark span:nth-child(3) { background: var(--gemini); left: 3px; top: 13px; }
+  .brand-mark span:nth-child(4) { background: var(--qwen); left: 13px; top: 13px; }
+  .brand h1 { font-size: 16px; font-weight: 600; margin: 0; letter-spacing: -.01em; }
+  .brand p { font-size: 12px; color: var(--muted); margin: 0; }
+
+  .label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 8px 4px; }
+  .agents { display: flex; flex-direction: column; gap: 6px; }
+  .agent {
+    width: 100%; padding: 10px 12px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface);
+    transition: border-color .2s, background .2s;
+  }
+  .agent-top { display: flex; align-items: center; gap: 12px; }
+  .agent.off .agent-top, .agent.off .model { opacity: .45; }
+  .agent-role { font-size: 12px; color: var(--text-2); line-height: 1.45; margin: 8px 0 0; }
+  .model { margin-top: 8px; width: 100%; font: 12px/1.2 "JetBrains Mono", monospace; color: var(--text-2); background: var(--surface-2); border: 1px solid var(--border); border-radius: 7px; padding: 5px 8px; cursor: pointer; }
+  .model:hover { border-color: var(--border-strong); color: var(--text); }
+  .switch { border: none; padding: 0; }
+  .agent:hover { border-color: var(--border-strong); }
+  .agent.lead { border-color: color-mix(in srgb, var(--c) 35%, var(--border)); }
+  .lead-badge { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--c); background: var(--c-soft); padding: 1px 6px; border-radius: 99px; margin-left: 6px; vertical-align: 1px; }
+  .agent.speaking { border-color: color-mix(in srgb, var(--c) 50%, transparent); background: var(--c-soft); }
+  .agent-info { flex: 1; min-width: 0; }
+  .agent-info b { display: block; font-size: 14px; font-weight: 600; white-space: nowrap; }
+  .agent-info small { display: block; font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .agent.speaking small { color: var(--c); font-weight: 500; }
+  .switch { width: 28px; height: 16px; border-radius: 99px; background: var(--border-strong); position: relative; flex-shrink: 0; transition: background .2s; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; transition: transform .2s; }
+  .agent:not(.off) .switch { background: var(--c); }
+  .agent:not(.off) .switch::after { transform: translateX(12px); }
+
+  .wave { display: none; gap: 2px; align-items: center; height: 14px; }
+  .agent.speaking .wave { display: flex; }
+  .wave i { width: 2px; border-radius: 2px; background: var(--c); animation: wave 1s ease-in-out infinite; }
+  .wave i:nth-child(1) { height: 6px; } .wave i:nth-child(2) { height: 12px; animation-delay: .15s; }
+  .wave i:nth-child(3) { height: 8px; animation-delay: .3s; } .wave i:nth-child(4) { height: 11px; animation-delay: .45s; }
+  @keyframes wave { 50% { transform: scaleY(.35); } }
+
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center;
+    background: var(--c); color: #fff; font-weight: 600; font-size: 13px; position: relative;
+  }
+  .avatar.sm { width: 18px; height: 18px; font-size: 10px; }
+  .agent.speaking .avatar, .msg.typing .avatar { animation: glow 1.8s ease-in-out infinite; }
+  @keyframes glow { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c) 45%, transparent); } 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--c) 0%, transparent); } }
+
+  .setting { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+  .row { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+  .row input { margin: 3px 0 0; accent-color: var(--accent); }
+  .row b { display: block; font-size: 14px; font-weight: 500; }
+  .row small { display: block; font-size: 12px; color: var(--text-2); line-height: 1.5; }
+  .segmented { display: grid; grid-template-columns: repeat(auto-fit, minmax(48px, 1fr)); background: var(--surface-2); border-radius: 8px; padding: 3px; gap: 2px; }
+  .segmented button { border: none; background: none; padding: 5px 2px; border-radius: 6px; font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .segmented button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); font-weight: 500; }
+
+  .tips { font-size: 12px; color: var(--text-2); line-height: 1.7; padding: 0 4px; }
+  .tips kbd, .tips code { font-family: "JetBrains Mono", monospace; font-size: 11px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; }
+  .side-foot { margin-top: auto; display: flex; gap: 8px; }
+  .btn { border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--text-2); display: inline-flex; align-items: center; gap: 6px; transition: color .15s, border-color .15s; }
+  .btn:hover { color: var(--text); border-color: var(--border-strong); }
+  .btn.grow { flex: 1; justify-content: center; }
+  .icon { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ---------- main ---------- */
+  main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
+  .topbar { height: 56px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 20px; border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter: blur(12px); }
+  .menu-btn { display: none; border: none; background: none; padding: 6px; margin-left: -6px; }
+  .topbar-title { font-size: 14px; font-weight: 500; }
+  .topbar-status { margin-left: auto; font-size: 13px; color: var(--text-2); display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .topbar-status .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--agree); }
+  .topbar-status.busy .dot { background: var(--c, var(--disagree)); animation: pulse 1.2s infinite; }
+  @keyframes pulse { 50% { opacity: .3; } }
+
+  /* turn progress */
+  .progress { display: none; padding: 10px 20px 12px; border-bottom: 1px solid var(--border); background: var(--bg); }
+  .progress.show { display: block; animation: fadeDown .25s ease; }
+  .progress-inner { max-width: 800px; margin: 0 auto; display: flex; gap: 16px; }
+  .phase { flex: var(--n); min-width: 0; }
+  .phase-name { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 6px; }
+  .phase.current .phase-name { color: var(--text); }
+  .steps { display: flex; gap: 4px; }
+  .step { flex: 1; height: 4px; border-radius: 4px; background: var(--border); position: relative; overflow: hidden; }
+  .step.done { background: var(--c); }
+  .step.now { background: color-mix(in srgb, var(--c) 25%, transparent); }
+  .step.now::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, var(--c), transparent); animation: shimmer 1.4s infinite; }
+  .step-names { display: flex; gap: 4px; margin-top: 5px; }
+  .step-names span { flex: 1; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .step-names span.now { color: var(--c); font-weight: 600; }
+  .step-names span.done { color: var(--text-2); }
+  @keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-4px); } }
+
+  /* chat */
+  #chat { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 32px 20px 160px; }
+  .thread { max-width: 800px; margin: 0 auto; }
+  .item { transition: opacity .3s; }
+  .item.past { opacity: .62; }
+  .item.past:hover { opacity: 1; }
+
+  .user-col { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; max-width: min(80%, 620px); }
+  .user-col .bubble { max-width: 100%; }
+  .user-images { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+  .user-images a { display: block; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: var(--surface-2); }
+  .user-images img { display: block; max-width: 240px; max-height: 180px; object-fit: cover; }
+
+  .attachments { display: none; gap: 8px; padding: 0 0 8px 4px; flex-wrap: wrap; }
+  .attachments.show { display: flex; }
+  .thumb { position: relative; width: 64px; height: 64px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: var(--surface-2); box-shadow: var(--shadow-float); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb.loading img { opacity: .4; }
+  .thumb.loading::after { content: ""; position: absolute; inset: 22px; border: 2px solid var(--border-strong); border-top-color: var(--text); border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .thumb button { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 50%; border: none; background: rgba(0,0,0,.65); color: #fff; font-size: 13px; line-height: 20px; padding: 0; }
+  .attach { width: 40px; height: 40px; border-radius: 50%; border: none; background: none; color: var(--text-2); display: grid; place-items: center; flex-shrink: 0; margin-left: -10px; transition: background .15s, color .15s; }
+  .attach:hover { background: var(--surface-2); color: var(--text); }
+  .composer.dragging { border-color: var(--text); border-style: dashed; }
+
+  .preview { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin: 10px 0 12px; background: var(--surface-2); }
+  .preview-bar { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--surface); flex-wrap: wrap; }
+  .preview-title { font-size: 12px; font-weight: 600; color: var(--text-2); margin-right: auto; display: flex; align-items: center; gap: 6px; }
+  .preview-title::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--agree)); }
+  .preview-seg { display: inline-flex; background: var(--surface-2); border-radius: 8px; padding: 2px; }
+  .preview-seg button, .preview-open { border: none; background: none; font-size: 12px; padding: 4px 10px; border-radius: 6px; color: var(--text-2); }
+  .preview-seg button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); font-weight: 500; }
+  .preview-open:hover { color: var(--text); background: var(--surface-2); }
+  .preview-stage { display: flex; justify-content: center; padding: 0; }
+  .preview-stage iframe { width: 100%; height: 560px; border: none; background: #fff; display: block; }
+  .preview-stage.mobile { padding: 16px; }
+  .preview-stage.mobile iframe { width: 390px; max-width: 100%; height: 720px; border-radius: 28px; box-shadow: 0 0 0 8px #1f1f1f, var(--shadow-float); }
+  .preview pre { margin: 0; border: none; border-radius: 0; max-height: 520px; }
+
+  .msg { display: flex; gap: 12px; margin-bottom: 20px; animation: rise .35s cubic-bezier(.2,.8,.2,1); }
+  @keyframes rise { from { opacity: 0; transform: translateY(20px); } }
+  .msg-body { flex: 1; min-width: 0; }
+  .msg-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; min-height: 22px; }
+  .msg-head .name { font-weight: 600; font-size: 14px; }
+  .msg-head .maker, .msg-head .time { font-size: 12px; color: var(--muted); }
+  .tag { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 99px; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border); }
+  .tag.critique { background: var(--disagree-soft); color: var(--disagree); border-color: transparent; }
+  .tag.summary { background: var(--agree-soft); color: var(--agree); border-color: transparent; }
+  .tag.review { background: var(--disagree-soft); color: var(--disagree); border-color: transparent; }
+  .tag.lead { background: var(--c-soft); color: var(--c); border-color: transparent; }
+  .msg.pass { align-items: center; gap: 8px; margin: -6px 0 12px 44px; font-size: 13px; color: var(--text-2); }
+  .msg.pass .check { width: 16px; height: 16px; color: var(--agree); stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .msg.pass b { font-weight: 600; color: var(--c); }
+  .msg.pass .time { color: var(--muted); font-size: 12px; }
+  .msg.review.stance-disagree .bubble, .msg.review .bubble { box-shadow: 0 0 0 3px color-mix(in srgb, var(--disagree) 12%, transparent); }
+  .mode-desc { font-size: 12px; color: var(--text-2); line-height: 1.5; margin: 0; }
+  .target { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 1px 8px 1px 2px; border-radius: 99px; border: 1px solid var(--border); color: var(--text-2); background: var(--surface); }
+  .target.agree { border-color: color-mix(in srgb, var(--agree) 40%, transparent); color: var(--agree); }
+  .target.disagree { border-color: color-mix(in srgb, var(--disagree) 45%, transparent); color: var(--disagree); }
+  .target .arrow { color: var(--muted); font-size: 11px; }
+
+  .bubble { background: var(--surface); border: 1px solid var(--border); border-radius: 4px var(--radius) var(--radius) var(--radius); padding: 12px 16px; overflow-wrap: anywhere; position: relative; }
+  .bubble::before { content: ""; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px; border-radius: 4px 0 0 var(--radius); background: var(--c); }
+  .msg.critique.stance-agree .bubble { box-shadow: 0 0 0 3px color-mix(in srgb, var(--agree) 10%, transparent); }
+  .msg.critique.stance-disagree .bubble { box-shadow: 0 0 0 3px color-mix(in srgb, var(--disagree) 12%, transparent); }
+  .msg.summary .bubble { background: var(--c-soft); border-color: color-mix(in srgb, var(--c) 30%, transparent); }
+  .msg.error .bubble { background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 30%, transparent); }
+  .msg.error .bubble::before { background: var(--danger); }
+  .err-title { color: var(--danger); font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+  .err-log { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--text-2); white-space: pre-wrap; margin: 0; }
+
+  .msg.user { justify-content: flex-end; margin: 8px 0 24px; }
+  .msg.user .bubble { background: var(--accent); color: var(--accent-text); border: none; border-radius: var(--radius) 4px var(--radius) var(--radius); max-width: min(80%, 620px); white-space: pre-wrap; }
+  .msg.user .bubble::before { display: none; }
+  .msg.system { justify-content: center; }
+  .msg.system span { font-size: 12px; color: var(--muted); background: var(--surface-2); padding: 4px 12px; border-radius: 99px; }
+
+  .divider { display: flex; align-items: center; gap: 12px; margin: 28px 0 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+  .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+  .bubble p { margin: 0 0 10px; } .bubble > :last-child { margin-bottom: 0; }
+  .bubble pre { background: var(--surface-2); border: 1px solid var(--border); padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 13px; line-height: 1.5; margin: 8px 0 12px; }
+  .bubble :not(pre) > code { font-size: 13px; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+  .bubble ul, .bubble ol { margin: 4px 0 10px; padding-left: 22px; } .bubble li { margin: 2px 0; }
+  .bubble h4 { margin: 14px 0 6px; font-size: 15px; font-weight: 600; }
+  .mention { font-weight: 600; color: var(--c); background: var(--c-soft); padding: 0 6px; border-radius: 6px; white-space: nowrap; }
+  .verdict { display: flex; gap: 8px; padding: 8px 12px; border-radius: 8px; margin-bottom: 6px; font-size: 14px; }
+  .verdict.agree { background: var(--agree-soft); }
+  .verdict.disagree { background: var(--disagree-soft); }
+  .verdict.assign { background: var(--surface-2); border: 1px dashed var(--border-strong); }
+  .tag.task { background: var(--c-soft); color: var(--c); border-color: transparent; }
+  .assignment { font-size: 13px; color: var(--text-2); background: var(--surface-2); border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; }
+  .assignment b { color: var(--text); font-weight: 600; }
+  .model-chip { font: 11px "JetBrains Mono", monospace; color: var(--muted); }
+  .verdict + p { margin-top: 12px; }
+
+  .skeleton { display: flex; flex-direction: column; gap: 8px; padding: 4px 0; }
+  .skeleton i { display: block; height: 10px; border-radius: 6px; background: linear-gradient(90deg, var(--surface-2) 0%, var(--c-soft) 40%, color-mix(in srgb, var(--c) 30%, var(--surface-2)) 50%, var(--c-soft) 60%, var(--surface-2) 100%); background-size: 300% 100%; animation: sweep 1.6s linear infinite; }
+  .skeleton i:nth-child(1) { width: 92%; } .skeleton i:nth-child(2) { width: 76%; } .skeleton i:nth-child(3) { width: 48%; }
+  @keyframes sweep { from { background-position: 100% 0; } to { background-position: 0 0; } }
+  .typing-note { font-size: 12px; color: var(--text-2); margin-top: 10px; }
+
+  /* empty */
+  .empty { text-align: center; padding-top: 12vh; animation: rise .5s ease; }
+  .orbs { position: relative; width: 96px; height: 84px; margin: 0 auto 24px; }
+  .orbs span { position: absolute; width: 52px; height: 52px; border-radius: 50%; opacity: .85; mix-blend-mode: multiply; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .orbs span { mix-blend-mode: screen; } }
+  :root[data-theme="dark"] .orbs span { mix-blend-mode: screen; }
+  .orbs span:nth-child(1) { background: var(--claude); left: 4px; top: 0; }
+  .orbs span:nth-child(2) { background: var(--codex); left: 40px; top: 0; }
+  .orbs span:nth-child(3) { background: var(--gemini); left: 4px; top: 32px; }
+  .orbs span:nth-child(4) { background: var(--qwen); left: 40px; top: 32px; }
+  .empty h2 { font-size: 22px; font-weight: 600; letter-spacing: -.02em; margin: 0 0 8px; }
+  .empty > p { color: var(--text-2); margin: 0 auto 28px; max-width: 460px; }
+  .suggestions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 620px; margin: 0 auto; text-align: left; }
+  .suggestion { border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius); padding: 12px 14px; font-size: 14px; color: var(--text-2); transition: border-color .15s, transform .15s, color .15s; text-align: left; }
+  .suggestion:hover { border-color: var(--border-strong); color: var(--text); transform: translateY(-1px); }
+  .suggestion b { display: block; color: var(--text); font-weight: 500; margin-bottom: 2px; }
+
+  /* composer */
+  .composer-wrap { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 20px 20px; pointer-events: none; background: linear-gradient(transparent, var(--bg) 40%); }
+  form { pointer-events: auto; max-width: 800px; margin: 0 auto; position: relative; }
+  .composer { display: flex; align-items: flex-end; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 8px 8px 8px 18px; box-shadow: var(--shadow-float); transition: border-color .15s; }
+  .composer:focus-within { border-color: var(--border-strong); }
+  textarea { flex: 1; resize: none; border: none; outline: none; background: none; color: var(--text); font: inherit; padding: 8px 0; min-height: 24px; max-height: 200px; line-height: 1.5; transition: height .1s; }
+  textarea::placeholder { color: var(--muted); }
+  .send { width: 40px; height: 40px; border-radius: 50%; border: none; background: var(--accent); color: var(--accent-text); display: grid; place-items: center; flex-shrink: 0; transition: opacity .15s, transform .1s, background .2s; }
+  .send:active { transform: scale(.94); }
+  .send:disabled { opacity: .25; cursor: default; }
+  .send.stop { background: var(--danger); color: #fff; }
+  .composer-hint { text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .composer-hint b { color: var(--text-2); font-weight: 500; }
+
+  .mention-menu { position: absolute; bottom: calc(100% + 8px); left: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-float); padding: 6px; min-width: 220px; display: none; }
+  .mention-menu.show { display: block; animation: rise .15s ease; }
+  .mention-menu button { display: flex; align-items: center; gap: 10px; width: 100%; border: none; background: none; padding: 8px 10px; border-radius: 8px; text-align: left; font-size: 14px; }
+  .mention-menu button small { color: var(--muted); margin-left: auto; font-size: 12px; }
+  .mention-menu button.active { background: var(--surface-2); }
+
+  .toast { position: fixed; top: 16px; left: 50%; transform: translate(-50%, -20px); opacity: 0; background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; transition: all .25s; z-index: 50; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .scrim { display: none; }
+
+  @media (max-width: 860px) {
+    aside { position: fixed; inset: 0 auto 0 0; transform: translateX(-100%); transition: transform .25s ease; background: var(--surface); box-shadow: var(--shadow-float); }
+    body.drawer aside { transform: none; }
+    body.drawer .scrim { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 15; }
+    .menu-btn { display: block; }
+    .topbar, .progress { padding-left: 16px; padding-right: 16px; }
+    #chat { padding: 20px 16px 150px; }
+    .composer-wrap { padding: 0 16px 12px; }
+    .suggestions { grid-template-columns: 1fr; }
+    .step-names { display: none; }
+    .composer-hint { display: none; }
+    .msg { gap: 10px; }
+    .msg-head .maker { display: none; }
+    .msg.pass { margin-left: 42px; }
+  }
+</style>
+</head>
+<body>
+<div class="scrim" id="scrim"></div>
+
+<aside>
+  <div class="brand">
+    <div class="brand-mark"><span></span><span></span><span></span><span></span></div>
+    <div><h1>Agent Room</h1><p>Đội ngũ AI cùng build app</p></div>
+  </div>
+
+  <div>
+    <p class="label">Thành viên</p>
+    <div class="agents" id="agents"></div>
+  </div>
+
+  <div>
+    <p class="label">Cách thảo luận</p>
+    <div class="setting" id="setting">
+      <div class="segmented" id="mode" style="grid-template-columns: 1fr 1fr"></div>
+      <p class="mode-desc" id="mode-desc"></p>
+      <div>
+        <p class="label" style="margin-left:0" id="judge-label">Trưởng nhóm</p>
+        <div class="segmented" id="judge"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tips">
+    Gõ <code>@</code> để gọi riêng một AI.<br>
+    Dán, kéo thả hoặc bấm 📎 để gửi ảnh cho AI xem.<br>
+    Gạt công tắc trên thẻ để cho AI đó nghỉ.<br>
+    <kbd>Enter</kbd> gửi, <kbd>Shift</kbd> + <kbd>Enter</kbd> xuống dòng.
+  </div>
+
+  <div class="side-foot">
+    <button class="btn grow" id="reset" type="button">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Cuộc trò chuyện mới
+    </button>
+    <button class="btn" id="theme" type="button" title="Đổi giao diện sáng tối" aria-label="Đổi giao diện sáng tối">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+</aside>
+
+<main>
+  <header class="topbar">
+    <button class="menu-btn" id="menu" type="button" aria-label="Mở menu">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <span class="topbar-title">Thảo luận chung</span>
+    <span class="topbar-status" id="status"><span class="dot"></span><span id="status-text">Sẵn sàng</span></span>
+  </header>
+  <div class="progress" id="progress"><div class="progress-inner" id="progress-inner"></div></div>
+
+  <div id="chat"><div class="thread" id="thread"></div></div>
+
+  <div class="composer-wrap">
+    <form id="composer">
+      <div class="mention-menu" id="mention-menu"></div>
+      <div class="attachments" id="attachments"></div>
+      <div class="composer" id="composer-box">
+        <button class="attach" id="attach" type="button" aria-label="Đính kèm ảnh" title="Đính kèm ảnh (hoặc dán, kéo thả ảnh vào đây)">
+          <svg class="icon" viewBox="0 0 24 24" style="width:19px;height:19px"><path d="M21 11.5l-8.6 8.6a5 5 0 0 1-7.1-7.1l8.6-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></svg>
+        </button>
+        <input type="file" id="file" accept="image/png,image/jpeg,image/gif,image/webp" multiple hidden>
+        <textarea id="input" rows="1" placeholder="Nhắn cho cả nhóm, gõ @ để hỏi riêng một AI, hoặc dán ảnh vào đây"></textarea>
+        <button class="send" id="send" type="submit" aria-label="Gửi" disabled></button>
+      </div>
+      <p class="composer-hint" id="hint"></p>
+    </form>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Thông tin agent được nạp lại từ /api/config khi trang mở.
+let AGENTS = {
+  claude: { name: 'Claude', maker: 'Anthropic', initial: 'C', role: '', models: [] },
+  codex:  { name: 'ChatGPT', maker: 'OpenAI Codex', initial: 'X', role: '', models: [] },
+  gemini: { name: 'Gemini', maker: 'Google', initial: 'G', role: '', models: [] },
+  design: { name: 'Claude Design', maker: 'Anthropic', initial: 'D', role: '', models: [], designer: true },
+  qwen:   { name: 'Qwen', maker: 'Alibaba · chạy trên máy', initial: 'Q', role: '', models: [], local: true, defaultModel: 'qwen3.5:9b' },
+};
+let ORDER = ['claude', 'codex', 'gemini', 'design', 'qwen'];
+const ALIASES = { claude: 'claude', codex: 'codex', chatgpt: 'codex', gpt: 'codex', gemini: 'gemini', qwen: 'qwen', design: 'design', designer: 'design', claudedesign: 'design' };
+// "Claude Design" phải đứng trước "Claude" để không bị hiểu nhầm.
+const MENTION_RE = /@(claude[\s_-]*design|claude|codex|chatgpt|gpt|gemini|qwen|designer|design)\b/gi;
+const aliasId = (n) => ALIASES[n.toLowerCase().replace(/[\s_-]/g, '')];
+const shortName = (id) => (id === 'design' ? 'Design' : AGENTS[id].name);
+const ROUND = { answer: 'Trả lời', task: 'Nhận việc', review: 'Góp ý', critique: 'Phản biện', summary: 'Tổng kết' };
+const DOING = { answer: 'đang trả lời', task: 'đang làm việc được giao', review: 'đang xem lại', critique: 'đang phản biện', summary: 'đang tổng kết' };
+const MODES = {
+  team: { name: 'Làm việc nhóm', desc: 'Trưởng nhóm trả lời và giao việc theo vai trò. Ai được giao thì làm, ai không thì chỉ lên tiếng khi thấy sai.', judge: 'Trưởng nhóm' },
+  debate: { name: 'Thảo luận', desc: 'Tất cả cùng trả lời, phản biện nhau, rồi một người tổng kết. Kỹ hơn nhưng dài và chậm hơn.', judge: 'Người tổng kết' },
+};
+const SUGGESTIONS = [
+  ['Chọn công nghệ', 'Nên dùng React hay Vue cho app quản lý mục tiêu cá nhân?'],
+  ['Thiết kế dữ liệu', 'Thiết kế database cho một app ghi chú có chia sẻ theo nhóm.'],
+  ['Review dự án', 'Xem qua thư mục dự án này và góp ý kiến trúc giúp mình.'],
+  ['Ý tưởng', 'App nào đáng để một người làm một mình trong năm 2026?'],
+];
+const ICON_SEND = '<svg class="icon" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+const ICON_STOP = '<svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>';
+
+const $ = (id) => document.getElementById(id);
+const state = { history: [], busy: false, thinking: null, since: 0, plan: [], index: -1 };
+
+const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
+const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+const prefs = Object.assign({ agents: {}, models: {}, mode: 'team', judge: 'claude', theme: null }, load('prefs', {}));
+if (!MODES[prefs.mode]) prefs.mode = 'team';
+for (const id of ORDER) if (prefs.agents[id] === undefined) prefs.agents[id] = true;
+const savePrefs = () => save('prefs', prefs);
+if (prefs.theme) document.documentElement.dataset.theme = prefs.theme;
+
+// ---------- helpers ----------
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const avatar = (id, cls = '') => `<div class="avatar ${id} ${cls}">${AGENTS[id].initial}</div>`;
+const timeOf = (iso) => iso ? new Date(iso).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '';
+
+function toast(text) {
+  const t = $('toast');
+  t.textContent = text;
+  t.classList.add('show');
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function inline(s) {
+  return s
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+    .replace(/(^|[\s(])\*([^*\s][^*]*)\*/g, '$1<i>$2</i>')
+    .replace(MENTION_RE, (_, n) => { const id = aliasId(n); return `<span class="mention ${id}">@${AGENTS[id].name}</span>`; });
+}
+
+function previewBlock(code) {
+  return `<div class="preview">
+    <div class="preview-bar">
+      <span class="preview-title">Bản xem trước</span>
+      <span class="preview-seg">
+        <button type="button" data-act="desktop" class="on">Máy tính</button><button type="button" data-act="mobile">Điện thoại</button><button type="button" data-act="code">Code</button>
+      </span>
+      <button type="button" class="preview-open" data-act="open">Mở tab mới ↗</button>
+    </div>
+    <div class="preview-stage"><iframe sandbox="allow-scripts" loading="lazy" srcdoc="${esc(code)}" title="Bản xem trước thiết kế"></iframe></div>
+    <pre hidden><code>${esc(code)}</code></pre>
+  </div>`;
+}
+
+function markdown(src) {
+  const parts = String(src).split(/```([\w-]*)[^\n]*\n?([\s\S]*?)```/g);
+  const out = [];
+  for (let i = 0; i < parts.length; i += 3) {
+    out.push(markdownText(esc(parts[i])));
+    if (i + 2 >= parts.length) break;
+    const lang = parts[i + 1].toLowerCase();
+    const code = parts[i + 2].replace(/\n$/, '');
+    const isPage = (lang === 'html' || lang === 'htm') && /<(!doctype|html|body|div|main|section|style)\b/i.test(code);
+    out.push(isPage ? previewBlock(code) : `<pre><code>${esc(code)}</code></pre>`);
+  }
+  return out.join('');
+}
+
+function markdownText(part) {
+  {
+    const out = [];
+    let list = null;
+    for (const line of part.split('\n')) {
+      const li = line.match(/^\s*(?:[-*•]|\d+[.)])\s+(.*)/);
+      if (li && !/^\s*(👍|⚠️|📋)/.test(li[1])) {
+        const type = /^\s*\d/.test(line) ? 'ol' : 'ul';
+        if (list !== type) { if (list) out.push(`</${list}>`); list = type; out.push(`<${list}>`); }
+        out.push(`<li>${inline(li[1])}</li>`);
+        continue;
+      }
+      if (list) { out.push(`</${list}>`); list = null; }
+      const text = line.replace(/^\s*[-*•]\s+/, '');
+      if (!text.trim()) continue;
+      const h = text.match(/^#{1,6}\s+(.*)/);
+      if (h) { out.push(`<h4>${inline(h[1])}</h4>`); continue; }
+      const v = text.match(/^\s*(👍|⚠️|📋)\s*(.*)/);
+      if (v) { out.push(`<div class="verdict ${{ '👍': 'agree', '⚠️': 'disagree', '📋': 'assign' }[v[1]]}"><span>${v[1]}</span><span>${inline(v[2])}</span></div>`); continue; }
+      out.push(`<p>${inline(text)}</p>`);
+    }
+    if (list) out.push(`</${list}>`);
+    return out.join('');
+  }
+}
+
+// Server sends targets; fall back to parsing the text for older messages.
+function targetsOf(m) {
+  if (Array.isArray(m.targets) && m.targets.length) {
+    return m.targets.map((t) => (typeof t === 'string' ? { agent: t } : t)).filter((t) => AGENTS[t.agent] && t.agent !== m.agent);
+  }
+  const map = {};
+  for (const line of m.text.split('\n')) {
+    const stance = /^\s*(?:[-*]\s*)?👍/.test(line) ? 'agree' : /^\s*(?:[-*]\s*)?⚠️/.test(line) ? 'disagree' : null;
+    for (const [, n] of line.matchAll(MENTION_RE)) {
+      const id = aliasId(n);
+      if (id === m.agent) continue;
+      if (!map[id]) map[id] = { agent: id };
+      if (stance) map[id].stance = map[id].stance && map[id].stance !== stance ? 'mixed' : stance;
+    }
+  }
+  return Object.values(map);
+}
+
+// ---------- sidebar ----------
+function modelOptions(id) {
+  const a = AGENTS[id];
+  const current = prefs.models[id] || '';
+  const list = [...new Set([...(a.models || []), ...(current ? [current] : [])])];
+  const opts = a.local
+    ? list.map((m) => `<option value="${esc(m)}" ${m === (current || a.defaultModel) ? 'selected' : ''}>${esc(m)}</option>`)
+    : [`<option value="" ${current ? '' : 'selected'}>Model mặc định</option>`, ...list.map((m) => `<option value="${esc(m)}" ${m === current ? 'selected' : ''}>${esc(m)}</option>`)];
+  if (a.local && a.ollama === false) opts.unshift('<option value="" disabled>Ollama chưa chạy</option>');
+  opts.push('<option value="__custom">Nhập tên model khác…</option>');
+  return opts.join('');
+}
+
+function renderAgents() {
+  const lead = currentLead();
+  $('agents').innerHTML = ORDER.map((id) => {
+    const a = AGENTS[id];
+    const speaking = state.thinking?.agent === id;
+    const off = !prefs.agents[id];
+    const sub = speaking ? DOING[state.thinking.round][0].toUpperCase() + DOING[state.thinking.round].slice(1) : off ? 'Đang nghỉ' : `${a.maker}`;
+    const isLead = prefs.mode === 'team' && id === lead && !off;
+    return `<div class="agent ${id} ${speaking ? 'speaking' : ''} ${off ? 'off' : ''} ${isLead ? 'lead' : ''}">
+      <div class="agent-top">
+        ${avatar(id)}
+        <span class="agent-info"><b>${a.name}${isLead ? '<span class="lead-badge">Trưởng nhóm</span>' : ''}</b><small>${sub}</small></span>
+        <span class="wave"><i></i><i></i><i></i><i></i></span>
+        <button type="button" class="switch" data-id="${id}" role="switch" aria-checked="${!off}" aria-label="Bật tắt ${a.name}"></button>
+      </div>
+      ${a.role ? `<p class="agent-role">${esc(a.role)}</p>` : ''}
+      <select class="model" data-id="${id}" aria-label="Chọn model cho ${a.name}">${modelOptions(id)}</select>
+    </div>`;
+  }).join('');
+}
+
+function currentLead() {
+  const on = ORDER.filter((id) => prefs.agents[id]);
+  return on.includes(prefs.judge) ? prefs.judge : on[0];
+}
+
+$('agents').onclick = (e) => {
+  const el = e.target.closest('.switch');
+  if (!el) return;
+  prefs.agents[el.dataset.id] = !prefs.agents[el.dataset.id];
+  savePrefs();
+  renderAgents();
+  renderHint();
+};
+
+$('agents').onchange = (e) => {
+  const sel = e.target.closest('.model');
+  if (!sel) return;
+  const id = sel.dataset.id;
+  let value = sel.value;
+  if (value === '__custom') {
+    value = (prompt(`Nhập tên model cho ${AGENTS[id].name}:`, prefs.models[id] || '') || '').trim();
+    if (!value) return renderAgents();
+  }
+  prefs.models[id] = value;
+  savePrefs();
+  renderAgents();
+  toast(`${AGENTS[id].name} sẽ dùng ${value || 'model mặc định'}`);
+};
+
+function renderSettings() {
+  $('mode').innerHTML = Object.entries(MODES).map(([id, m]) => `<button type="button" data-id="${id}" class="${prefs.mode === id ? 'on' : ''}">${m.name}</button>`).join('');
+  $('mode-desc').textContent = MODES[prefs.mode].desc;
+  $('judge-label').textContent = MODES[prefs.mode].judge;
+  $('judge').innerHTML = ORDER.map((id) => `<button type="button" data-id="${id}" class="${prefs.judge === id ? 'on' : ''}" title="${AGENTS[id].name}">${shortName(id)}</button>`).join('');
+}
+$('mode').onclick = (e) => { const b = e.target.closest('button'); if (b) { prefs.mode = b.dataset.id; savePrefs(); renderSettings(); renderHint(); renderAgents(); } };
+$('judge').onclick = (e) => { const b = e.target.closest('button'); if (b) { prefs.judge = b.dataset.id; savePrefs(); renderSettings(); renderHint(); renderAgents(); } };
+
+function renderHint() {
+  const on = ORDER.filter((id) => prefs.agents[id]);
+  const mentioned = [...new Set([...$('input').value.matchAll(MENTION_RE)].map((m) => aliasId(m[1])))];
+  const who = mentioned.length ? mentioned : on;
+  const names = who.map((id) => `<b>${AGENTS[id].name}</b>`);
+  const list = names.length > 1 ? names.slice(0, -1).join(', ') + ' và ' + names.at(-1) : names[0];
+  $('hint').innerHTML = !who.length ? 'Hãy bật ít nhất một AI để bắt đầu'
+    : mentioned.length ? `Chỉ ${list} sẽ trả lời tin nhắn này`
+    : who.length === 1 ? `${list} sẽ trả lời`
+    : prefs.mode === 'team' ? leadHint(who)
+    : `${list} sẽ lần lượt trả lời, sau đó phản biện nhau`;
+}
+
+function leadHint(who) {
+  const lead = who.includes(prefs.judge) ? prefs.judge : who[0];
+  const names = who.filter((id) => id !== lead).map((id) => `<b>${AGENTS[id].name}</b>`);
+  const others = names.length > 1 ? names.slice(0, -1).join(', ') + ' và ' + names.at(-1) : names[0];
+  return `<b>${AGENTS[lead].name}</b> trả lời và giao việc, ${others} làm phần được giao hoặc góp ý khi thấy sai`;
+}
+
+// ---------- status & progress ----------
+function renderStatus() {
+  const s = $('status');
+  const t = state.thinking;
+  s.className = 'topbar-status' + (state.busy ? ' busy' : '') + (t ? ' ' + t.agent : '');
+  $('status-text').textContent = t ? `${AGENTS[t.agent].name} ${DOING[t.round]}` : state.busy ? 'Đang xử lý' : 'Sẵn sàng';
+}
+
+function renderProgress() {
+  const plan = state.plan || [];
+  const show = state.busy && plan.length > 1;
+  $('progress').classList.toggle('show', show);
+  if (!show) return;
+  const phases = [];
+  plan.forEach((step, i) => {
+    let p = phases.at(-1);
+    if (!p || p.round !== step.round) phases.push(p = { round: step.round, steps: [] });
+    p.steps.push({ ...step, i });
+  });
+  $('progress-inner').innerHTML = phases.map((p) => {
+    const current = p.steps.some((s) => s.i === state.index);
+    const cls = (s) => (s.i < state.index ? 'done' : s.i === state.index ? 'now' : '');
+    return `<div class="phase ${current ? 'current' : ''}" style="--n:${p.steps.length}">
+      <div class="phase-name">${ROUND[p.round]}</div>
+      <div class="steps">${p.steps.map((s) => `<div class="step ${s.agent} ${cls(s)}"></div>`).join('')}</div>
+      <div class="step-names">${p.steps.map((s) => `<span class="${s.agent} ${cls(s)}">${AGENTS[s.agent].name}</span>`).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+// ---------- thread ----------
+function renderMessage(m, prev) {
+  if (m.role === 'user') {
+    const imgs = (m.images || []).map((img) => `<a href="/uploads/${encodeURIComponent(img.file)}" target="_blank" rel="noopener" title="${esc(img.name)}"><img src="/uploads/${encodeURIComponent(img.file)}" alt="${esc(img.name)}" loading="lazy"></a>`).join('');
+    return `<div class="msg user"><div class="user-col">${imgs ? `<div class="user-images">${imgs}</div>` : ''}<div class="bubble">${esc(m.text)}</div></div></div>`;
+  }
+  if (m.role === 'system') return `<div class="msg system"><span>${esc(m.text)}</span></div>`;
+  const a = AGENTS[m.agent];
+  if (!a) return '';
+  if (m.pass) {
+    return `<div class="msg pass ${m.agent}"><svg class="check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      <span><b>${a.name}</b> đã xem lại và thấy ổn</span><span class="time">${m.seconds != null ? m.seconds + ' giây' : ''}</span></div>`;
+  }
+  let divider = '';
+  if ((m.round === 'critique' || m.round === 'summary') && prev?.round !== m.round) divider = `<div class="divider">${m.round === 'critique' ? 'Vòng phản biện' : 'Tổng kết'}</div>`;
+
+  const targets = m.round === 'critique' || m.round === 'review' ? targetsOf(m) : [];
+  const stances = new Set(targets.map((t) => t.stance).filter(Boolean));
+  const stance = stances.has('disagree') || stances.has('mixed') ? 'disagree' : stances.has('agree') ? 'agree' : '';
+  const stanceLabel = m.round === 'review' ? { agree: 'đồng ý', disagree: 'góp ý cho', mixed: 'góp ý cho' } : { agree: 'đồng ý', disagree: 'phản đối', mixed: 'góp ý' };
+  const chips = targets.map((t) =>
+    `<span class="target ${t.stance === 'mixed' ? '' : t.stance || ''}" title="${a.name} ${stanceLabel[t.stance] || 'nhắc tới'} ${AGENTS[t.agent].name}">
+      ${avatar(t.agent, 'sm')}${t.stance ? stanceLabel[t.stance] + ' ' : ''}${AGENTS[t.agent].name}</span>`).join('');
+
+  const body = m.error
+    ? `<div class="err-title">${a.name} chưa trả lời được</div><pre class="err-log">${esc(m.text)}</pre>`
+    : (m.assignment ? `<div class="assignment"><b>Việc được giao:</b> ${inline(esc(m.assignment))}</div>` : '') + markdown(m.text);
+
+  return `${divider}<div class="msg ${m.agent} ${m.round} ${m.error ? 'error' : ''} ${stance ? 'stance-' + stance : ''}">
+    ${avatar(m.agent)}
+    <div class="msg-body">
+      <div class="msg-head">
+        <span class="name">${a.name}</span>
+        <span class="tag ${m.round}">${ROUND[m.round] || 'Trả lời'}</span>
+        ${chips ? `<span class="arrow" style="color:var(--muted);font-size:12px">với</span>${chips}` : ''}
+        <span class="maker">${m.model ? `<span class="model-chip">${esc(m.model)}</span>` : a.maker}</span>
+        <span class="time">${timeOf(m.time)}${m.seconds != null ? ` · ${m.seconds} giây` : ''}</span>
+      </div>
+      <div class="bubble">${body}</div>
+    </div>
+  </div>`;
+}
+
+function renderTyping() {
+  const t = state.thinking;
+  if (!t) return '';
+  const a = AGENTS[t.agent];
+  const lead = state.plan?.[0]?.agent;
+  const note = {
+    critique: 'Đang đọc lại câu trả lời của các bạn khác',
+    summary: 'Đang gom ý kiến cả nhóm',
+    review: `Đang kiểm tra câu trả lời của ${AGENTS[lead]?.name || 'trưởng nhóm'}, chỉ lên tiếng nếu thấy có vấn đề`,
+    task: `Đang làm phần việc ${AGENTS[lead]?.name || 'trưởng nhóm'} giao`,
+  }[t.round] || 'Đang suy nghĩ';
+  return `<div class="msg typing ${t.agent}">
+    ${avatar(t.agent)}
+    <div class="msg-body">
+      <div class="msg-head"><span class="name">${a.name}</span><span class="tag ${t.round}">${ROUND[t.round]}</span></div>
+      <div class="bubble"><div class="skeleton"><i></i><i></i><i></i></div>
+        <div class="typing-note">${note} <span id="elapsed"></span></div></div>
+    </div>
+  </div>`;
+}
+
+function renderEmpty() {
+  return `<div class="empty">
+    <div class="orbs"><span></span><span></span><span></span><span></span></div>
+    <h2>Bắt đầu một cuộc thảo luận</h2>
+    <p>Đặt câu hỏi cho cả nhóm. Claude dẫn dắt và chia việc. ChatGPT lo kịch bản và debug, Gemini hỗ trợ code, Claude Design dựng mockup xem trước được ngay, Qwen hỗ trợ viết code. Bạn có thể gửi kèm ảnh để cả đội cùng xem.</p>
+    <div class="suggestions">${SUGGESTIONS.map(([t, q]) => `<button type="button" class="suggestion" data-q="${esc(q)}"><b>${t}</b>${esc(q)}</button>`).join('')}</div>
+  </div>`;
+}
+
+function renderThread() {
+  const chat = $('chat');
+  const nearBottom = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 120;
+  const h = state.history;
+  if (!h.length && !state.thinking) {
+    $('thread').innerHTML = renderEmpty();
+    $('thread').dataset.mode = 'empty';
+    return;
+  }
+  // Chỉ vẽ lại phần thay đổi, để bản xem trước thiết kế (iframe) không bị tải lại mỗi lần có sự kiện.
+  const thread = $('thread');
+  if (thread.dataset.mode === 'empty') { thread.innerHTML = ''; thread.dataset.mode = ''; }
+  const lastUser = h.findLastIndex((m) => m.role === 'user');
+  const items = h.map((m, i) => ({ key: m.id, html: renderMessage(m, h[i - 1]), past: i < lastUser }));
+  if (state.thinking) items.push({ key: `typing-${state.thinking.agent}-${state.thinking.round}`, html: renderTyping(), past: false });
+  const kids = [...thread.children];
+  let i = 0;
+  for (; i < items.length && i < kids.length; i++) {
+    if (kids[i].dataset.key !== items[i].key || kids[i]._html !== items[i].html) break;
+    kids[i].classList.toggle('past', items[i].past);
+  }
+  kids.slice(i).forEach((k) => k.remove());
+  for (; i < items.length; i++) {
+    const el = document.createElement('div');
+    el.className = 'item' + (items[i].past ? ' past' : '');
+    el.dataset.key = items[i].key;
+    el._html = items[i].html;
+    el.innerHTML = items[i].html;
+    thread.appendChild(el);
+  }
+  tickElapsed();
+  if (nearBottom || state.stick) { chat.scrollTop = chat.scrollHeight; state.stick = false; }
+}
+
+function tickElapsed() {
+  const el = $('elapsed');
+  if (el) el.textContent = `· ${Math.max(0, Math.round((Date.now() - state.since) / 1000))} giây`;
+}
+setInterval(tickElapsed, 1000);
+
+function renderComposer() {
+  $('send').innerHTML = state.busy ? ICON_STOP : ICON_SEND;
+  $('send').classList.toggle('stop', state.busy);
+  $('send').setAttribute('aria-label', state.busy ? 'Dừng' : 'Gửi');
+  const uploading = pending.some((p) => !p.file);
+  $('send').disabled = !state.busy && (uploading || (!$('input').value.trim() && !pending.length));
+}
+
+function render() {
+  renderAgents();
+  renderStatus();
+  renderProgress();
+  renderThread();
+  renderComposer();
+}
+
+// ---------- live updates ----------
+function connect() {
+  const es = new EventSource('/events');
+  es.onmessage = (e) => {
+    const ev = JSON.parse(e.data);
+    switch (ev.type) {
+      case 'init':
+        state.history = ev.history || [];
+        state.busy = !!ev.busy;
+        if (ev.turn) { state.plan = ev.turn.plan || []; state.index = ev.turn.index ?? -1; }
+        state.stick = true;
+        break;
+      case 'message': state.history.push(ev.message); break;
+      case 'busy': state.busy = ev.busy; if (!ev.busy) { state.plan = []; state.index = -1; } break;
+      case 'thinking': state.thinking = ev.agent ? ev : null; state.since = Date.now(); break;
+      case 'turn': state.plan = ev.plan || []; state.index = ev.index ?? -1; break;
+      default: return;
+    }
+    render();
+  };
+  es.onerror = () => { es.close(); setTimeout(connect, 2000); };
+}
+
+// ---------- actions ----------
+async function post(url, body) {
+  try {
+    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) toast(data.error || 'Có lỗi xảy ra, bạn thử lại nhé');
+    return r.ok;
+  } catch {
+    toast('Không kết nối được tới server');
+    return false;
+  }
+}
+
+async function send(text) {
+  const mentioned = new RegExp(MENTION_RE.source, 'i').test(text);
+  if (!mentioned && !ORDER.some((id) => prefs.agents[id])) return toast('Hãy bật ít nhất một AI trước đã');
+  if (pending.some((p) => !p.file)) return toast('Ảnh vẫn đang tải lên, đợi chút nhé');
+  state.stick = true;
+  const images = pending.map(({ file, name }) => ({ file, name }));
+  const ok = await post('/api/message', { text, images, mode: prefs.mode, lead: prefs.judge, judge: prefs.judge, agents: prefs.agents, models: prefs.models });
+  if (ok) {
+    $('input').value = '';
+    pending.forEach((p) => URL.revokeObjectURL(p.preview));
+    pending.length = 0;
+    renderAttachments(); autosize(); renderComposer(); renderHint();
+  }
+}
+
+// ---------- ảnh đính kèm ----------
+const pending = [];
+const IMAGE_OK = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+
+function renderAttachments() {
+  const box = $('attachments');
+  box.classList.toggle('show', pending.length > 0);
+  box.innerHTML = pending.map((p, i) => `<div class="thumb ${p.file ? '' : 'loading'}" title="${esc(p.name)}">
+    <img src="${p.preview}" alt="${esc(p.name)}"><button type="button" data-i="${i}" aria-label="Bỏ ảnh">×</button></div>`).join('');
+}
+
+$('attachments').onclick = (e) => {
+  const b = e.target.closest('button[data-i]');
+  if (!b) return;
+  const [p] = pending.splice(Number(b.dataset.i), 1);
+  if (p) URL.revokeObjectURL(p.preview);
+  renderAttachments(); renderComposer();
+};
+
+const readDataURL = (f) => new Promise((ok, fail) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = fail; r.readAsDataURL(f); });
+
+async function addFiles(files) {
+  for (const f of files) {
+    if (!IMAGE_OK.includes(f.type)) { toast('Chỉ gửi được ảnh PNG, JPG, GIF hoặc WEBP'); continue; }
+    if (f.size > 10 * 1024 * 1024) { toast('Ảnh phải nhỏ hơn 10 MB'); continue; }
+    if (pending.length >= 6) { toast('Mỗi tin nhắn gửi tối đa 6 ảnh'); break; }
+    const item = { name: f.name || 'Ảnh dán', preview: URL.createObjectURL(f), file: null };
+    pending.push(item);
+    renderAttachments(); renderComposer();
+    try {
+      const r = await fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: item.name, type: f.type, data: await readDataURL(f) }) });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error);
+      item.file = data.file;
+    } catch (err) {
+      pending.splice(pending.indexOf(item), 1);
+      toast(err.message || 'Không tải ảnh lên được');
+    }
+    renderAttachments(); renderComposer();
+  }
+}
+
+$('attach').onclick = () => $('file').click();
+$('file').onchange = (e) => { addFiles([...e.target.files]); e.target.value = ''; };
+$('input').addEventListener('paste', (e) => {
+  const files = [...(e.clipboardData?.files || [])].filter((f) => f.type.startsWith('image/'));
+  if (files.length) { e.preventDefault(); addFiles(files); }
+});
+const box = $('composer-box');
+['dragenter', 'dragover'].forEach((t) => box.addEventListener(t, (e) => { if (e.dataTransfer?.types.includes('Files')) { e.preventDefault(); box.classList.add('dragging'); } }));
+['dragleave', 'drop'].forEach((t) => box.addEventListener(t, () => box.classList.remove('dragging')));
+box.addEventListener('drop', (e) => { e.preventDefault(); addFiles([...e.dataTransfer.files]); });
+
+// ---------- bản xem trước thiết kế ----------
+$('thread').addEventListener('click', (e) => {
+  const b = e.target.closest('.preview [data-act]');
+  if (!b) return;
+  const pv = b.closest('.preview');
+  const stage = pv.querySelector('.preview-stage');
+  const code = pv.querySelector('pre');
+  const act = b.dataset.act;
+  if (act === 'open') {
+    const url = URL.createObjectURL(new Blob([code.textContent], { type: 'text/html' }));
+    window.open(url, '_blank', 'noopener');
+    return setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+  pv.querySelectorAll('.preview-seg button').forEach((x) => x.classList.toggle('on', x === b));
+  stage.hidden = act === 'code';
+  code.hidden = act !== 'code';
+  stage.classList.toggle('mobile', act === 'mobile');
+});
+
+$('composer').onsubmit = (e) => {
+  e.preventDefault();
+  if (state.busy) return post('/api/stop');
+  const text = $('input').value.trim();
+  if (text || pending.length) send(text);
+};
+
+$('thread').onclick = (e) => {
+  const s = e.target.closest('.suggestion');
+  if (s) { $('input').value = s.dataset.q; autosize(); renderComposer(); $('input').focus(); }
+};
+
+$('reset').onclick = async () => {
+  if (state.busy) return toast('Đợi các AI nói xong hoặc bấm dừng trước nhé');
+  if (state.history.length && !confirm('Bắt đầu cuộc trò chuyện mới? Nội dung hiện tại sẽ bị xoá.')) return;
+  if (await post('/api/reset')) document.body.classList.remove('drawer');
+};
+
+$('theme').onclick = () => {
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const current = prefs.theme || (dark ? 'dark' : 'light');
+  prefs.theme = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = prefs.theme;
+  savePrefs();
+};
+
+$('menu').onclick = () => document.body.classList.add('drawer');
+$('scrim').onclick = () => document.body.classList.remove('drawer');
+
+// ---------- composer & @mention menu ----------
+const input = $('input');
+const menu = $('mention-menu');
+let menuItems = [], menuIndex = 0;
+
+function autosize() { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 200) + 'px'; }
+
+function mentionQuery() {
+  const before = input.value.slice(0, input.selectionStart);
+  const m = before.match(/(?:^|\s)@(\w*)$/);
+  return m ? m[1].toLowerCase() : null;
+}
+
+function updateMenu() {
+  const q = mentionQuery();
+  menuItems = q === null ? [] : ORDER.filter((id) => Object.entries(ALIASES).some(([al, to]) => to === id && al.startsWith(q)) || AGENTS[id].name.toLowerCase().startsWith(q));
+  menuIndex = Math.min(menuIndex, Math.max(0, menuItems.length - 1));
+  menu.classList.toggle('show', menuItems.length > 0);
+  menu.innerHTML = menuItems.map((id, i) => `<button type="button" class="${i === menuIndex ? 'active' : ''}" data-id="${id}">${avatar(id, 'sm')}${AGENTS[id].name}<small>${AGENTS[id].maker}</small></button>`).join('');
+}
+
+function pickMention(id) {
+  const pos = input.selectionStart;
+  const before = input.value.slice(0, pos).replace(/@(\w*)$/, `@${shortName(id)} `);
+  input.value = before + input.value.slice(pos);
+  input.setSelectionRange(before.length, before.length);
+  input.focus();
+  updateMenu(); renderComposer(); renderHint();
+}
+
+menu.onmousedown = (e) => { const b = e.target.closest('button'); if (b) { e.preventDefault(); pickMention(b.dataset.id); } };
+input.addEventListener('input', () => { autosize(); updateMenu(); renderComposer(); renderHint(); });
+input.addEventListener('click', updateMenu);
+input.addEventListener('blur', () => setTimeout(() => menu.classList.remove('show'), 100));
+input.addEventListener('keydown', (e) => {
+  if (menuItems.length && menu.classList.contains('show')) {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      menuIndex = (menuIndex + (e.key === 'ArrowDown' ? 1 : -1) + menuItems.length) % menuItems.length;
+      return updateMenu();
+    }
+    if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); return pickMention(menuItems[menuIndex]); }
+    if (e.key === 'Escape') { menuItems = []; return menu.classList.remove('show'); }
+  }
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('composer').requestSubmit(); }
+});
+
+async function loadConfig() {
+  try {
+    const cfg = await (await fetch('/api/config')).json();
+    AGENTS = cfg.agents;
+    ORDER = cfg.order;
+    for (const id of ORDER) if (prefs.agents[id] === undefined) prefs.agents[id] = true;
+  } catch {
+    toast('Không tải được cấu hình agent');
+  }
+  renderSettings();
+  renderHint();
+  render();
+}
+
+renderSettings();
+renderHint();
+render();
+connect();
+loadConfig();
+</script>
+</body>
+</html>
